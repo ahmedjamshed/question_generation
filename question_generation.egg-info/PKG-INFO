@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: question-generation
-Version: 0.2.0
+Version: 0.3.0
 Summary: Question generation is the task of automatically generating questions from a text paragraph.
 Home-page: https://github.com/patil-suraj/question_generation
 Author: Suraj Patil
@@ -31,9 +31,9 @@ License-File: LICENSE
   - [Results](#results)
   - [Requirements](#requirements)
   - [Usage](#usage)
-      - [Question Generation](#question-generation)
-      - [Multitask QA-QG](#multitask-qa-qg-1)
-      - [End-to-end question generation (without answer supervision)](#end-to-end-question-generation-without-answer-supervision)
+    - [Question Generation](#question-generation)
+    - [Multitask QA-QG](#multitask-qa-qg-1)
+    - [End-to-end question generation (without answer supervision)](#end-to-end-question-generation-without-answer-supervision)
   - [Fine-tuning](#fine-tuning)
     - [Data processing](#data-processing)
     - [training](#training)
@@ -41,14 +41,14 @@ License-File: LICENSE
   - [Applications 🚀](#applications-)
   - [Relevant papers](#relevant-papers)
 
-
 ## Project Details
-Question generation is the task of automatically generating questions from a text paragraph. The most straight-forward way for this is answer aware question generation. In answer aware question generation the model is presented with the answer and the passage and asked to generate a question for that answer by considering the passage context. While there are many papers available for QG task, it's still not as mainstream as QA. One of the reasons is most of the earlier papers use complicated models/processing pipelines and have no pre-trained models available. Few recent papers, specifically UniLM and ProphetNet have SOTA pre-trained weights availble for QG but the usage seems quite complicated. 
+
+Question generation is the task of automatically generating questions from a text paragraph. The most straight-forward way for this is answer aware question generation. In answer aware question generation the model is presented with the answer and the passage and asked to generate a question for that answer by considering the passage context. While there are many papers available for QG task, it's still not as mainstream as QA. One of the reasons is most of the earlier papers use complicated models/processing pipelines and have no pre-trained models available. Few recent papers, specifically UniLM and ProphetNet have SOTA pre-trained weights availble for QG but the usage seems quite complicated.
 
 This project is aimed as an open source study on question generation with pre-trained transformers (specifically seq-2-seq models) using straight-forward end-to-end methods without much complicated pipelines. The goal is to provide simplified data processing and training scripts and easy to use pipelines for inference.
- 
 
 ## Initial experiments
+
 Initial experiments are conducted using the SQuADv1 dataset and T5 model with different input processing formats as described below.
 
 ### answer aware question generation
@@ -57,13 +57,13 @@ For answer aware models the input text can be processed in two ways.
 
 **1. prepend format:**
 
- Here the answer is simply added before the context and seperated by sep token. For example
+Here the answer is simply added before the context and seperated by sep token. For example
 
- `42 [SEP] 42 is the answer to life, the universe and everything.`
+`42 [SEP] 42 is the answer to life, the universe and everything.`
 
- for T5 model the input is processed like this
+for T5 model the input is processed like this
 
- `answer: 42  context: 42 is the answer to life, the universe and everything.`
+`answer: 42 context: 42 is the answer to life, the universe and everything.`
 
 **2. highlight format**
 
@@ -71,21 +71,21 @@ Here the answer span is highlighted within the text with special highlight token
 
 `<hl> 42 <hl> is the answer to life, the universe and everything.`
 
-This idea is proposed in the "A Recurrent BERT-based Model for Question Generation" [paper](https://www.aclweb.org/anthology/D19-5821.pdf). See section 4.3 
+This idea is proposed in the "A Recurrent BERT-based Model for Question Generation" [paper](https://www.aclweb.org/anthology/D19-5821.pdf). See section 4.3
 
 ### answer extraction models
 
-As the answer aware models need answers for generating question, we need something which can extract answer like spans from the text. This can be done using various methods like NER, noun-phrase extarction etc. But here a model is trained to extract answer like spans, to see how it'll work. With T5, answer extarction is done using the text-to-format. 
+As the answer aware models need answers for generating question, we need something which can extract answer like spans from the text. This can be done using various methods like NER, noun-phrase extarction etc. But here a model is trained to extract answer like spans, to see how it'll work. With T5, answer extarction is done using the text-to-format.
 
 As the highlight format will need to know the position of extracted answer spans the input for answer extraction is processed as follows
 
-  1. split the text into senteces. 
-  2. for each sentence that has answers, highlight the sentence with `<hl>` tokens.
-  3. for the target text join the answers in that sentence with `<sep>` tokens.
+1. split the text into senteces.
+2. for each sentence that has answers, highlight the sentence with `<hl>` tokens.
+3. for the target text join the answers in that sentence with `<sep>` tokens.
 
-For example for this text 
+For example for this text
 
-`Python is a programming language. Created by Guido van Rossum and first released in 1991.` 
+`Python is a programming language. Created by Guido van Rossum and first released in 1991.`
 
 following examples will be created
 
@@ -95,7 +95,7 @@ Input text:
 target text:
 `Python <sep>`
 
-and 
+and
 
 Input text:
 `Python is a programming language. <hl> Created by Guido van Rossum and first released in 1991 <hl>.`
@@ -134,36 +134,38 @@ target text: `Who created Python ? <sep> When was python released ? <sep>`
 
 ## Results
 
-Results on the SQuAD1.0 dev set using above approaches. For decoding, beam search with num_beams 4 is used with max decoding length set to 32. 
+Results on the SQuAD1.0 dev set using above approaches. For decoding, beam search with num_beams 4 is used with max decoding length set to 32.
 
 For multitask qa-qg models the EM and F1 scores are privded as QA-EM and QA-F1.
 
 The [nlg-eval](https://github.com/Maluuba/nlg-eval) package is used for calculating the metrics.
 
-
 | Name                                                                       | BLEU-4  | METEOR  | ROUGE-L | QA-EM  | QA-F1  | QG-FORMAT |
-|----------------------------------------------------------------------------|---------|---------|---------|--------|--------|-----------|
+| -------------------------------------------------------------------------- | ------- | ------- | ------- | ------ | ------ | --------- |
 | [t5-base-qg-hl](https://huggingface.co/valhalla/t5-base-qg-hl)             | 21.3226 | 27.0854 | 43.5962 | -      | -      | highlight |
 | [t5-base-qa-qg-hl](https://huggingface.co/valhalla/t5-base-qa-qg-hl)       | 21.0141 | 26.9113 | 43.2484 | 82.46  | 90.272 | highlight |
 | [t5-small-qa-qg-hl](https://huggingface.co/valhalla/t5-small-qa-qg-hl)     | 18.9872 | 25.2217 | 40.7893 | 76.121 | 84.904 | highlight |
 | [t5-small-qg-hl](https://huggingface.co/valhalla/t5-small-qg-hl)           | 18.5921 | 24.9915 | 40.1886 | -      | -      | highlight |
 | [t5-small-qg-prepend](https://huggingface.co/valhalla/t5-small-qg-prepend) | 18.2791 | 24.6722 | 39.958  | -      | -      | prepend   |
 
-
 ## Requirements
+
 ```
 python -m pip install git+https://github.com/patil-suraj/question_generation.git
 ```
 
 after installing `nltk` do
+
 ```bash
 python -m nltk.downloader punkt
 ```
 
 ## Usage
+
 Use the pipeline whch mimics 🤗transformers pipeline for easy inference.
 
 The pipeline is divided into 3 tasks
+
 1. `question-generation`: for single task question generation models.
 2. `multitask-qa-qg`: for multi-task qa,qg models.
 3. `e2e-qg`: for end-to-end question generation.
@@ -181,6 +183,7 @@ nlp("42 is the answer to life, the universe and everything.")
 ```
 
 **prepend format**
+
 ```python3
 nlp = pipeline("question-generation", model="valhalla/t5-small-qg-prepend", qg_format="prepend")
 nlp("42 is the answer to life, the universe and everything.")
@@ -188,6 +191,7 @@ nlp("42 is the answer to life, the universe and everything.")
 ```
 
 #### Multitask QA-QG
+
 ```python3
 nlp = pipeline("multitask-qa-qg")
 
@@ -204,6 +208,7 @@ nlp({
 ```
 
 #### End-to-end question generation (without answer supervision)
+
 ```python3
 nlp = pipeline("e2e-qg")
 nlp("Python is a programming language. Created by Guido van Rossum and first released in 1991.")
@@ -214,7 +219,7 @@ nlp("Python is a programming language. Created by Guido van Rossum and first rel
 ]
 ```
 
-By default both pipelines will use the t5-small* models, to use the other models pass the path through `model` paramter.
+By default both pipelines will use the t5-small\* models, to use the other models pass the path through `model` paramter.
 
 By default the `question-generation` pipeline will download the [valhalla/t5-small-qg-hl](https://huggingface.co/valhalla/t5-small-qg-hl) model with `highlight` qg format. If you want to use prepend format then provide the path to the prepend model and set `qg_format` to `"prepend"`. For extracting answer like spans it uses [valhalla/t5-small-qa-qg-hl](https://huggingface.co/valhalla/t5-small-qa-qg-hl) model, you can provide a different model through `ans_model` parameter.
 
@@ -224,7 +229,7 @@ The `e2e-qg` pipeline is for end-to-end question generation. These models can ge
 
 ## Fine-tuning
 
-### Data processing 
+### Data processing
 
 To support different data formats the trainer expects pre-processed cached dataset, so you can process the data the way you want.
 The cached dataset should be saved using `torch.save` and it should return a `dict` with `source_ids`, `target_ids`, `attention_mask` keys from `__getitem__`.
@@ -232,7 +237,7 @@ The cached dataset should be saved using `torch.save` and it should return a `di
 - `source_ids`: encoded source text
 - `target_ids`: encoded target text
 - `attention_mask`: attention mask for the `source_ids`
-  
+
 The `T2TDataCollator` takes care of preparing right `input_ids` and `labels`. It also trims the batches dynamically to remove excessive padding tokens, to speed up the training.
 
 The `data/squad_multitask` containes the modifed SQuAD dataset for answer aware question generation (using both prepend and highlight formats), question answering (text-to-text), answer extraction and end-to-end question generation. This dataset can be loaded using the awesome 🤗`nlp` library, this makes processing very easy.
@@ -242,6 +247,7 @@ To process and cache the dataset use `prepare_data.py` script. It will load the 
 The datasets will be saved in `data/` directory. You should provide filenames using `train_file_name` and `valid_file_name` arguments.
 
 **process data for single task question generation with highlight_qg_format**
+
 ```bash
 python -m question_generation.prepare_data.py \
     --task qg \
@@ -261,7 +267,7 @@ python -m question_generation.prepare_data.py \
 ```bash
 python -m question_generation.prepare_data.py \
     --task multi \
-    --valid_for_qg_only \ 
+    --valid_for_qg_only \
     --model_type t5 \
     --dataset_path data/squad_multitask/ \
     --qg_format highlight_qg_format \
@@ -272,10 +278,11 @@ python -m question_generation.prepare_data.py \
 ```
 
 **process dataset for end-to-end question generation**
+
 ```bash
 python -m question_generation.prepare_data.py \
     --task e2e_qg \
-    --valid_for_qg_only \ 
+    --valid_for_qg_only \
     --model_type t5 \
     --dataset_path data/squad_multitask/ \
     --qg_format highlight_qg_format \
@@ -286,8 +293,8 @@ python -m question_generation.prepare_data.py \
 ```
 
 ### training
-Use the `run_qg.py` script to  start training. It uses transformers `Trainer` class for training the models.
 
+Use the `run_qg.py` script to start training. It uses transformers `Trainer` class for training the models.
 
 ```bash
 python -m question_generation.run_qg.py \
@@ -339,7 +346,7 @@ run_qg(args_dict)
 
 ### Evaluation
 
-Use the `eval.py` script for evaluting the model. 
+Use the `eval.py` script for evaluting the model.
 
 ```bash
 python -m question_generation.eval.py \
@@ -356,7 +363,7 @@ This will save the output at {output_path} file.
 To calculate the metrics install the [nlg-eval](https://github.com/Maluuba/nlg-eval) package and run
 
 ```bash
-nlg-eval --hypothesis=hypothesis_t5-base-qg-hl.txt --references=data/references.txt --no-skipthoughts --no-glove 
+nlg-eval --hypothesis=hypothesis_t5-base-qg-hl.txt --references=data/references.txt --no-skipthoughts --no-glove
 ```
 
 ## Applications 🚀
@@ -365,8 +372,14 @@ nlg-eval --hypothesis=hypothesis_t5-base-qg-hl.txt --references=data/references.
    [Medium article](https://medium.com/@nvarshney97/using-the-latest-nlp-techniques-for-fun-98f31ce7b556) and its [Colab Notebook](https://colab.research.google.com/gist/nrjvarshney/39ed6c80e2fe293b9e7eca5bc3a45b7d/quiz.ipynb)
 
 ## Relevant papers
+
 - https://arxiv.org/abs/1906.05416
 - https://www.aclweb.org/anthology/D19-5821/
 - https://arxiv.org/abs/2005.01107v1
+
+## Create release
+
+1. setup environment
+2. Run `python setup.py sdist`
 
 
