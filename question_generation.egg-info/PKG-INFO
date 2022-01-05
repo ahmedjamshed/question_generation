@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: question-generation
-Version: 0.3.0
+Version: 0.4.0
 Summary: Question generation is the task of automatically generating questions from a text paragraph.
 Home-page: https://github.com/patil-suraj/question_generation
 Author: Suraj Patil

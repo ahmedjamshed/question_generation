@@ -51,6 +51,9 @@ class QGPipeline:
         sents, answers = self._extract_answers(inputs)
         flat_answers = list(itertools.chain(*answers))
         
+        selectors = [len(a) > 0 for a in answers]
+        contexts = list(itertools.compress(sents, selectors))
+
         if len(flat_answers) == 0:
           return []
 
@@ -61,7 +64,7 @@ class QGPipeline:
         
         qg_inputs = [example['source_text'] for example in qg_examples]
         questions = self._generate_questions(qg_inputs)
-        output = [{'answer': example['answer'], 'question': que, 'context': context} for example, que, context in zip(qg_examples, questions, sents)]
+        output = [{'answer': example['answer'], 'question': que, 'context': context} for example, que, context in zip(qg_examples, questions, contexts)]
         return output
     
     def _generate_questions(self, inputs):
